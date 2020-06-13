@@ -1,23 +1,23 @@
 # UvA-Admission-Bot
 Small bot to check what place I am in the waiting list to get into the masters at UvA.
 
-### Ids of the website
+### Website
 
-HTML ids to get the coreect field in the site.
+JS, dynamic ids.
 
 https://datanose.nl/
-Login UvAnetID id:_177 _176 is th elink i think
+Login UvAnetID 
 
 My id: yyyyyyy
 PAssword: xxxxxx
 
-class="btn-submit
-
-Master enrolment _308
-
-Radio _393
-
-Text _463
+#reformat code
+#Clean read me
+#add timeloop
+#save position in file
+#read position from file
+#compare current vs file position
+#notif if different
 
 Retrieve any number or text 
 

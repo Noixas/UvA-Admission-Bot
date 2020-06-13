@@ -4,87 +4,107 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-my_url = 'https://datanose.nl/#'
-login ='https://content.datanose.nl/pages/login.jpg'
-driver = webdriver.Chrome('F:\chromedriver_win32\chromedriver.exe')
+
+from selenium.webdriver.chrome.options import Options
+my_url = 'https://datanose.nl/'
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+
+driver = webdriver.Chrome('F:\chromedriver_win32\chromedriver.exe',options=chrome_options) #download chrome driver and set here the path or set system variable for chromedriver
 driver.get(my_url)
+def wait_method(by_type, name_param):          
+    timeout = 10  
+    try:
+        element_present = EC.presence_of_element_located((by_type, name_param))
+        WebDriverWait(driver, timeout).until(element_present)
+    except TimeoutException:
+        print ("Timed out waiting for page to load")
 
-timeout = 5
-try:
-    element_present = EC.presence_of_element_located((By.CLASS_NAME, 'tile'))
-    WebDriverWait(driver, timeout).until(element_present)
-except TimeoutException:
-    print ("Timed out waiting for page to load")
+wait_method(By.CLASS_NAME,'tile')
 
-
-
-titles = driver.find_elements_by_class_name('tile')
 login_tile = 5
-titles[login_tile].click()
+driver.find_elements_by_class_name('tile')[login_tile].click()
 
 
-timeout = 5
-try:
-    element_present = EC.presence_of_element_located((By.ID, 'username'))
-    WebDriverWait(driver, timeout).until(element_present)
-except TimeoutException:
-    print ("Timed out waiting for page to load")
-
-
+wait_method(By.ID,'username')
 file5 = open('Credentials', 'r') 
 Lines = file5.readlines() 
-
 username = driver.find_element_by_id('username')
 username.send_keys(Lines[0])
-try:
-    element_present = EC.presence_of_element_located((By.ID, 'password'))
-    WebDriverWait(driver, timeout).until(element_present)
-except TimeoutException:
-    print ("Timed out waiting for page to load")
+
+wait_method(By.ID,'password')
     
 password = driver.find_element_by_id('password')
 password.send_keys(Lines[1])
 password.send_keys(Keys.ENTER)
-print('end')
-print(username)
+
 url2 = "nav#enrolmaster"
-try:
-    element_present = EC.presence_of_element_located((By.XPATH, '//a[@href="'+url2+'"]'))
-    WebDriverWait(driver, timeout).until(element_present)
-except TimeoutException:
-    print ("Timed out waiting for page to load")
+xpath_master_enrol = '//a[@href="'+url2+'"]'
+wait_method(By.XPATH, xpath_master_enrol)
 
-masters = driver.find_element_by_xpath('//a[@href="'+url2+'"]')
+masters = driver.find_element_by_xpath(xpath_master_enrol)
 masters.click()
-print(masters)
-print('DONE')
 
-url2 = 'radio'    
-timeout = 10
-try:    
-    element_present = EC.presence_of_element_located((By.XPATH, "//input[@type='radio']"))
-    WebDriverWait(driver, timeout).until(element_present)
-except TimeoutException:
-    print ("Timed out waiting for page to load")
-radio = driver.find_element_by_xpath("//input[@type='radio']")
-radio.click()
-uva_text = "selected and you are on the waiting list." 
+xpath_radio = "//input[@type='radio']"
+wait_method(By.XPATH, xpath_radio)
+driver.find_element_by_xpath(xpath_radio).click()
 
 
-try:    
-    element_present = EC.presence_of_element_located((By.XPATH, "//*[contains(text(), '"+uva_text+"')]"))
-    WebDriverWait(driver, timeout).until(element_present)
-except TimeoutException:    
-    print ("Timed out waiting for page to load")
-texta = driver.find_element_by_xpath("//*[contains(text(), '"+uva_text+"')]")
-text_uva_position = texta.text
-print(text_uva_position)
-position = [int(s) for s in text_uva_position.split() if s.isdigit()][0]
-pos_notif = str("Position: "+str(position+1)+"th")
 
-print(pos_notif)
+def get_position(driver):    
+    uva_text = "selected and you are on the waiting list." 
+    xpath_position_uva ="//*[contains(text(), '"+uva_text+"')]"
+    wait_method(By.XPATH,xpath_position_uva)
+    text_uva_position = driver.find_element_by_xpath(xpath_position_uva).text
+    print(text_uva_position)
+    position = [int(s) for s in text_uva_position.split() if s.isdigit()][0]
+    pos_notif = str("Position: "+str(position+1)+"th")
+
+    print(pos_notif)
+    
+    return int(position+1)
+
 from win10toast import ToastNotifier
-toaster = ToastNotifier()
-toaster.show_toast("Waiting list at UvA",pos_notif)
+def refresh_and_notify(driver):
+    
+    driver.refresh()
+    pos_notif= get_position(driver)
+    position_file = open('position', 'r') 
+    pos_file = int(position_file.readlines()[0])
+    if pos_file == pos_notif:
+        print('No changes, position is:',str(pos_notif))
+    else:
+        with open('position', 'r') as file:
+            data = file.readlines()
+        data[0]=str(pos_notif)
+        f = open("position", "w")
+        f.writelines(data)
+        f.close()        
+        toaster = ToastNotifier()
+        toaster.show_toast("Waiting list at UvA",str(pos_notif),duration=60000,threaded=True)
+        driver.refresh()
 
-driver.refresh()
+# refresh_and_notify(driver)
+#loop
+import time
+program_starts = time.time()
+count_ref = 0
+original_time=time.time()
+while(True):
+    now = time.time()   
+    if(int(1+now-program_starts)%30 == 0):
+        print("It has been {0} seconds since the loop started".format(now - original_time))
+        refresh_and_notify(driver)
+        print('times refreshed: ',count_ref)
+        count_ref+=1        
+        program_starts = time.time()
+
+
+
+#reformat code
+#Clean read me
+#add timeloop
+#save position in file
+#read position from file
+#compare current vs file position
+#notif if different
