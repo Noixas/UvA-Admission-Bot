@@ -77,6 +77,14 @@ try:
 except TimeoutException:    
     print ("Timed out waiting for page to load")
 texta = driver.find_element_by_xpath("//*[contains(text(), '"+uva_text+"')]")
-print(texta.text)
-position = [int(s) for s in texta.text.split() if s.isdigit()][0]
-print("Position:",position+1)
+text_uva_position = texta.text
+print(text_uva_position)
+position = [int(s) for s in text_uva_position.split() if s.isdigit()][0]
+pos_notif = str("Position: "+str(position+1)+"th")
+
+print(pos_notif)
+from win10toast import ToastNotifier
+toaster = ToastNotifier()
+toaster.show_toast("Waiting list at UvA",pos_notif)
+
+driver.refresh()
