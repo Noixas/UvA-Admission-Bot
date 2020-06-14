@@ -25,17 +25,26 @@ wait_method(By.CLASS_NAME,'tile')
 login_tile = 5
 driver.find_elements_by_class_name('tile')[login_tile].click()
 
+from cryptography.fernet import Fernet
+import pickle
+#Load the key for the crypto password
+with open ('crypto_pass.bin', 'rb') as fp:   key = pickle.load(fp)
+
+crypto_suite = Fernet(key)
+with open ('credentials.bin', 'rb') as fp:
+    credentials = pickle.load(fp)
+    #Unencrypt and decode credentials
+    cred = [crypto_suite.decrypt(crendential).decode('utf-8').strip() for crendential in credentials]
+    
 
 wait_method(By.ID,'username')
-file5 = open('Credentials', 'r') 
-Lines = file5.readlines() 
 username = driver.find_element_by_id('username')
-username.send_keys(Lines[0])
+username.send_keys(cred[0])
 
 wait_method(By.ID,'password')
     
 password = driver.find_element_by_id('password')
-password.send_keys(Lines[1])
+password.send_keys(cred[1])
 password.send_keys(Keys.ENTER)
 
 url2 = "nav#enrolmaster"
@@ -80,9 +89,48 @@ def refresh_and_notify(driver):
         f = open("position", "w")
         f.writelines(data)
         f.close()        
+        message = str("New position is " + str(pos_notif))
+        subject = "Waiting list at UvA"
+        send_email(subject,message)
+
         toaster = ToastNotifier()
-        toaster.show_toast("Waiting list at UvA",str(pos_notif),duration=60000,threaded=True)
+        toaster.show_toast(subject,str(pos_notif),duration=60000,threaded=True)
         driver.refresh()
+
+
+import smtplib,ssl
+import json
+
+def send_email(subject, body, file_emails='email.json'):
+    #load the emails from file
+    with open(file_emails, 'r') as fp:
+        email_data = json.load(fp)
+        
+    receiver = email_data['receiver']
+    sender= email_data['sender']
+    smtp_server = email_data['smtp_server']
+
+    gmail_password = cred[2]
+   
+    message = "Subject: "+subject+'\n \n'+body
+
+    port = 587
+    context = ssl.create_default_context()
+    try:
+        with smtplib.SMTP(smtp_server, port) as server:
+            server.ehlo()  # Can be omitted
+            server.starttls(context=context)
+            server.ehlo()  # Can be omitted            
+            print (sender,'- Login step next!')
+            server.login(sender, gmail_password)
+            
+            print (sender,'- Login Succesful!')
+            server.sendmail(sender, receiver, message)
+        print ('Email sent!')
+        print('Message:',message)
+    except:
+        print ('Something went wrong...')
+
 
 # refresh_and_notify(driver)
 #loop
@@ -108,3 +156,4 @@ while(True):
 #read position from file
 #compare current vs file position
 #notif if different
+#Encrypted passwords

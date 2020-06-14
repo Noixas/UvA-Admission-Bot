@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 Credentials
 .vscode/settings.json
+email.json
+*.bin
