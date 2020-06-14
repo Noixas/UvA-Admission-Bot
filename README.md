@@ -1,7 +1,14 @@
 # UvA-Admission-Bot
 Small bot to check what place I am in the waiting list to get into the masters at UvA.
+Check every 30 seconds if my position on the waiting list in Datanose.nl has changed. If that's the case send me an email and throw a desktop notification. 
 
-### Website
+
+Features:
+- Windows 10 desktop Notifications
+- Email notification
+- Encrypted passwords
+
+### Self notes
 
 JS, dynamic ids.
 
@@ -18,6 +25,7 @@ PAssword: xxxxxx
 #read position from file
 #compare current vs file position
 #notif if different
+#encryption
 
 Retrieve any number or text 
 
