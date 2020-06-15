@@ -150,20 +150,31 @@ def send_email(subject, body, file_emails='email.json'):
 ######   MAIN LOOP ##########################
 #############################################
 import time
-program_starts = time.time()
-count_ref = 0
-original_time=time.time()
-check_interval = 30 #seconds interval 
-#check every 30 seconds if position changed.
-while(True):
-    now = time.time()   
-    if(int(1+now-program_starts)%check_interval == 0):
-        print("It has been {0} seconds since the loop started".format(now - original_time))
-        refresh_and_notify(driver) #Reload site and notify if new position
-        print('times refreshed: ',count_ref)
-        count_ref+=1  #track how many times we have checked
-        program_starts = time.time() #restart timer.
 
+crash_counter = 0
+def loop():
+    try:
+        program_starts = time.time()
+        count_ref = 0
+        original_time=time.time()
+        check_interval = 30 #seconds interval 
+        #check every 30 seconds if position changed.
+        while(True):
+            now = time.time()   
+            if(int(1+now-program_starts)%check_interval == 0):
+                print("It has been {0} seconds since the loop started".format(now - original_time))
+                refresh_and_notify(driver) #Reload site and notify if new position
+                print('times refreshed: ',count_ref)
+                count_ref+=1  #track how many times we have checked
+                program_starts = time.time() #restart timer.
+    except KeyboardInterrupt:
+        raise
+    except:
+        global crash_counter
+        crash_counter+=1        
+        print("Crash counter: ", crash_counter)
+        loop()
+loop()
 
 
 #reformat code
