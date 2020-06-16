@@ -13,8 +13,8 @@ my_url = 'https://datanose.nl/' #site
 chrome_options = Options()
 chrome_options.add_argument("--headless") #Dont render chrome
 
-driver = webdriver.Chrome('F:\chromedriver_win32\chromedriver.exe',options=chrome_options) #download chrome driver and set here the path or set system variable for chromedriver
-driver.get(my_url)#Load wwebsite
+# driver = webdriver.Chrome('F:\chromedriver_win32\chromedriver.exe',options=chrome_options) #download chrome driver and set here the path or set system variable for chromedriver
+# driver.get(my_url)#Load wwebsite
 
 def wait_method(by_type, name_param):  
     """"
@@ -29,43 +29,45 @@ def wait_method(by_type, name_param):
     except TimeoutException:
         print ("Timed out waiting for page to load")
 
-wait_method(By.CLASS_NAME,'tile') #Find all the tiles which link to other sites in the website
 
-login_tile = 5 #tile 5 has the login link to UvA
-driver.find_elements_by_class_name('tile')[login_tile].click() #Go to login site.
+def login(driver):
 
+    wait_method(By.CLASS_NAME,'tile') #Find all the tiles which link to other sites in the website
 
-#Load the key for the crypto password
-with open ('crypto_pass.bin', 'rb') as fp:   key = pickle.load(fp)
-crypto_suite = Fernet(key) # Object to handle cryptology.
-#Load the encrypted credentials from bin file.
-with open ('credentials.bin', 'rb') as fp:
-    credentials = pickle.load(fp) 
-    #Unencrypt and decode credentials
-    cred = [crypto_suite.decrypt(crendential).decode('utf-8').strip() for crendential in credentials]
-    
+    login_tile = 5 #tile 5 has the login link to UvA
+    driver.find_elements_by_class_name('tile')[login_tile].click() #Go to login site.
+    #Load the key for the crypto password
+    with open ('crypto_pass.bin', 'rb') as fp:   key = pickle.load(fp)
+    crypto_suite = Fernet(key) # Object to handle cryptology.
+    #Load the encrypted credentials from bin file.
+    with open ('credentials.bin', 'rb') as fp:
+        credentials = pickle.load(fp) 
+        #Unencrypt and decode credentials
+        cred = [crypto_suite.decrypt(crendential).decode('utf-8').strip() for crendential in credentials]
+        
 
-wait_method(By.ID,'username') # Wait for username element to appear in login site.
-username = driver.find_element_by_id('username')
-username.send_keys(cred[0]) #Write the username in the input box
+    wait_method(By.ID,'username') # Wait for username element to appear in login site.
+    username = driver.find_element_by_id('username')
+    username.send_keys(cred[0]) #Write the username in the input box
 
-wait_method(By.ID,'password') # Wait for password element to appear in login site.
-    
-password = driver.find_element_by_id('password')
-password.send_keys(cred[1])#Write the password in the input box
-password.send_keys(Keys.ENTER) #Submit the fields and login
+    wait_method(By.ID,'password') # Wait for password element to appear in login site.
+        
+    password = driver.find_element_by_id('password')
+    password.send_keys(cred[1])#Write the password in the input box
+    password.send_keys(Keys.ENTER) #Submit the fields and login
 
-url2 = "nav#enrolmaster" # href with info related to masters application
-xpath_master_enrol = '//a[@href="'+url2+'"]' #xpath to find the element we can click and go to enrolmaster
-wait_method(By.XPATH, xpath_master_enrol)# Wait for enrolmaster element to appear in main site.
+    url2 = "nav#enrolmaster" # href with info related to masters application
+    xpath_master_enrol = '//a[@href="'+url2+'"]' #xpath to find the element we can click and go to enrolmaster
+    wait_method(By.XPATH, xpath_master_enrol)# Wait for enrolmaster element to appear in main site.
 
-masters = driver.find_element_by_xpath(xpath_master_enrol)
-masters.click() #Go to master enrolment site
+    masters = driver.find_element_by_xpath(xpath_master_enrol)
+    masters.click() #Go to master enrolment site
 
-xpath_radio = "//input[@type='radio']"
-wait_method(By.XPATH, xpath_radio)
-#Find and click on radio button to load the information of current status in master enrolment
-driver.find_element_by_xpath(xpath_radio).click() 
+    xpath_radio = "//input[@type='radio']"
+    wait_method(By.XPATH, xpath_radio)
+    #Find and click on radio button to load the information of current status in master enrolment
+    driver.find_element_by_xpath(xpath_radio).click()
+    return driver, cred 
 
 
 
@@ -88,7 +90,7 @@ def get_position(driver):
     return int(position+1) #return my position
 
 from win10toast import ToastNotifier
-def refresh_and_notify(driver):    
+def refresh_and_notify(driver,cred):    
     driver.refresh() #reload website
     pos_notif= get_position(driver) #get my position 
     position_file = open('position', 'r')  #open file with position from last iteration.
@@ -104,7 +106,7 @@ def refresh_and_notify(driver):
         f.close()        
         message = str("New position is " + str(pos_notif))
         subject = "Waiting list at UvA"
-        send_email(subject,message) #Send an email to myself notifying new position.
+        send_email(subject,message,cred) #Send an email to myself notifying new position.
 
         toaster = ToastNotifier() #windows10 notification object
         #create a windows 10 notification
@@ -115,7 +117,7 @@ def refresh_and_notify(driver):
 import smtplib,ssl
 import json
 
-def send_email(subject, body, file_emails='email.json'):
+def send_email(subject, body,cred, file_emails='email.json'):
     #load the emails sender and receiver from file
     with open(file_emails, 'r') as fp:
         email_data = json.load(fp)
@@ -125,6 +127,7 @@ def send_email(subject, body, file_emails='email.json'):
     smtp_server = email_data['smtp_server']
     #get the password for sender email, from previously unencrypted file.  
     gmail_password = cred[2] 
+    
    #Subject: declares subject in email, breakline to define body.
     message = "Subject: "+subject+'\n \n'+body
 
@@ -150,10 +153,12 @@ def send_email(subject, body, file_emails='email.json'):
 ######   MAIN LOOP ##########################
 #############################################
 import time
-
+driver = webdriver.Chrome('F:\chromedriver_win32\chromedriver.exe',options=chrome_options) #download chrome driver and set here the path or set system variable for chromedriver
+driver.get(my_url)#Load wwebsite
 crash_counter = 0
-def loop():
+def loop(driver):
     try:
+        driver, cred = login(driver)
         program_starts = time.time()
         count_ref = 0
         original_time=time.time()
@@ -163,7 +168,7 @@ def loop():
             now = time.time()   
             if(int(1+now-program_starts)%check_interval == 0):
                 print("It has been {0} seconds since the loop started".format(now - original_time))
-                refresh_and_notify(driver) #Reload site and notify if new position
+                refresh_and_notify(driver, cred) #Reload site and notify if new position
                 print('times refreshed: ',count_ref)
                 count_ref+=1  #track how many times we have checked
                 program_starts = time.time() #restart timer.
@@ -171,10 +176,12 @@ def loop():
         raise
     except:
         global crash_counter
-        crash_counter+=1        
+        crash_counter+=1    
+        driver = webdriver.Chrome('F:\chromedriver_win32\chromedriver.exe',options=chrome_options) #download chrome driver and set here the path or set system variable for chromedriver
+        driver.get(my_url)#Load wwebsite
         print("Crash counter: ", crash_counter)
-        loop()
-loop()
+        loop(driver)
+loop(driver)
 
 
 #reformat code
