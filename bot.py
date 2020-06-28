@@ -163,8 +163,9 @@ def loop(driver):
         program_starts = time.time()
         count_ref = 0
         original_time=time.time()
-        min_wait = 30
-        check_interval = min_wait*60 #seconds interval 
+        min_wait = 1
+        check_interval = min_wait*60 #seconds interval         
+        # program_starts -= check_interval #force update in first loop
         #check every 30 seconds if position changed.
         while(True):
             now = time.time()   
@@ -174,7 +175,7 @@ def loop(driver):
                 print('times refreshed: ',count_ref)
                 count_ref+=1  #track how many times we have checked
                 program_starts = time.time() #restart timer.
-                
+
     except KeyboardInterrupt:
         raise
     except:
