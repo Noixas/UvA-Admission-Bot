@@ -30,3 +30,7 @@ PAssword: xxxxxx
 Retrieve any number or text 
 
 python -c 'import pyppeteer; pyppeteer.chromium_downloader.download_chromium()'
+
+## Have I been accepted?
+
+**Yes!** On the 6th of July my status changed from being the next in the waiting list to accepted student.
