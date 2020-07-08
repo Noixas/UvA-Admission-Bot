@@ -1,5 +1,6 @@
 # UvA-Admission-Bot
-Small bot to check what place I am in the waiting list to get into the masters at UvA.
+Small bot to check what place I am in the waiting list to get into the [Master of AI at UvA.](https://www.uva.nl/en/programmes/masters/artificial-intelligence/artificial-intelligence.html)
+
 Check every 30 seconds if my position on the waiting list in Datanose.nl has changed. If that's the case send me an email and throw a desktop notification. 
 
 
